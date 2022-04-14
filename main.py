@@ -11,10 +11,12 @@ from deploy_assistant import DEPLOY_ACTIONS, BUILD_ACTION
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-s", "--simulate", "--dry-run", "--no-act", action="store_true")
 
     subparsers = parser.add_subparsers(title="Action.", required=True)
     build_action_parser = subparsers.add_parser(BUILD_ACTION)
-    build_action_parser.add_argument("next_version", choices=["major", "minor", "patch"], default="minor", required=False)
+    build_action_parser.add_argument("image")
+    build_action_parser.add_argument("next_version", choices=["major", "minor", "patch"], default="minor")
     build_action_parser.set_defaults(action="build")
 
     return parser.parse_args()
