@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class Actions(Enum):
-    BUILD_ACTION = "build"
+    BUILD = "build"
     DEPLOY = "deploy"
     UPDATE = "update"
     START = "start"
