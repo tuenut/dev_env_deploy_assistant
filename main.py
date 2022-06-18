@@ -1,44 +1,24 @@
 #!/usr/bin/env python3
 
 import sys
-import logging
+from loguru import logger
 
-from argparse import ArgumentParser
-
-from deploy_assistant import DEPLOY_ACTIONS, BUILD_ACTION
-
-
-def parse_args():
-    parser = ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument("-s", "--simulate", "--dry-run", "--no-act", action="store_true")
-
-    subparsers = parser.add_subparsers(title="Action.", required=True)
-    build_action_parser = subparsers.add_parser(BUILD_ACTION)
-    build_action_parser.add_argument("image")
-    build_action_parser.add_argument("next_version", choices=["major", "minor", "patch"], default="minor")
-    build_action_parser.set_defaults(action="build")
-
-    return parser.parse_args()
+from deploy_assistant import DEPLOY_ACTIONS
+from options import OptionsParser
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.DEBUG,
-        format="%(asctime)s: [%(levelname)s]: %(message)s",
-    )
-    logger = logging.getLogger("deploy-assistant")
+    logger.remove()
 
-    logger.debug("Logger initialized.")
-    logger.info("Development environment deploy assistant started.")
+    opts = OptionsParser().get_options()
 
-    args = parse_args()
+    logger.add(sys.stdout, level="DEBUG" if opts.verbose else "INFO")
+    logger.debug("Development environment deploy assistant started.")
 
-    logger.debug(f"Requested action: <{args}>.")
+    logger.debug(f"Requested action: <{opts}>.")
 
-    action_handler = DEPLOY_ACTIONS[args.action]
-    action_handler(args)
+    action_handler = DEPLOY_ACTIONS[opts.action]
+    action_handler(opts)
 
     logger.info("Done.")
 

@@ -1,1 +1,2 @@
+loguru
 semantic-version==2.9.0

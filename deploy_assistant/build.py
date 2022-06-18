@@ -1,12 +1,14 @@
-import logging
 import re
+
 from subprocess import Popen, PIPE
 from typing import List, Literal
 
+from loguru import logger
+
 from semantic_version import Version
 
+from options import Options
 
-logger = logging.getLogger("deploy-assistant.builder")
 
 _BUILD_VERSIONS_MAP = {
     "major": "next_major",
@@ -24,7 +26,7 @@ class ImageBuilder:
     __update_type: Literal["major", "minor", "patch"]
     __image: str
 
-    def __init__(self, args):
+    def __init__(self, args: Options):
         self.__simulate = args.simulate
         self.__update_type = args.next_version
         self.__image = args.image
