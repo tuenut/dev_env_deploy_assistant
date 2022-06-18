@@ -1,19 +1,29 @@
-from deploy_assistant.assistant.build import build_image
-from deploy_assistant.assistant.deploy import deploy_services
-from deploy_assistant.assistant.remove import remove_environment
-from deploy_assistant.assistant.start import start_environment
-from deploy_assistant.assistant.stop import stop_environment
-from deploy_assistant.assistant.update import update_services
-from deploy_assistant.app.actions import Actions
+from deploy_assistant.app.options import Actions
+from deploy_assistant.assistant.build import ImageBuilder
 
 
-DEPLOY_ACTIONS = {
-    Actions.BUILD: build_image,
-    Actions.DEPLOY: deploy_services,
-    Actions.UPDATE: update_services,
-    Actions.START: start_environment,
-    Actions.STOP: stop_environment,
-    Actions.REMOVE: remove_environment,
-}
+__all__ = ["Assistant"]
 
 
+class Assistant:
+    @classmethod
+    def do(cls, action: Actions, options):
+        handler = cls.HANDLERS[action]
+        return handler(options)
+
+    @staticmethod
+    def not_implemented(*args, **kwargs):
+        raise NotImplementedError("Action not implemented!")
+
+    @staticmethod
+    def build_image(options):
+        builder = ImageBuilder(options)
+        builder.build_image()
+
+    HANDLERS = {
+        Actions.BUILD: build_image,
+        Actions.SET: not_implemented,
+        Actions.RESET: not_implemented,
+        Actions.LIST: not_implemented,
+        Actions.PURGE: not_implemented,
+    }

@@ -1,8 +1,7 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
+from enum import Enum
 from typing import Literal
-
-from deploy_assistant.app.actions import Actions
 
 
 @dataclass
@@ -48,3 +47,15 @@ class OptionsParser:
         opts = Options(**dict(namespace._get_kwargs()))
 
         return opts
+
+
+class Actions(Enum):
+    BUILD = "build"
+    SET = "set"
+    RESET = "reset"
+    PURGE = "purge"
+    LIST = "list"
+
+    @classmethod
+    def get_action(cls, options: Options):
+        return getattr(cls, options.action.upper())

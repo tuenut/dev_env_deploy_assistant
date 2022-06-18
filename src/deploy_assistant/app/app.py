@@ -4,9 +4,8 @@ from loguru import logger
 
 from pathlib import Path
 
-from deploy_assistant.app.actions import Actions
-from deploy_assistant.app.options import OptionsParser, Options
-from deploy_assistant.assistant import DEPLOY_ACTIONS
+from deploy_assistant.app.options import OptionsParser, Options, Actions
+from deploy_assistant.assistant import Assistant
 
 
 class App:
@@ -24,9 +23,8 @@ class App:
         logger.debug(f"Workdir {Path('.').resolve()}")
         logger.debug(f"Requested action: <{self.opts.action}>.")
 
-        action = Actions[self.opts.action.upper()]
-        action_handler = DEPLOY_ACTIONS[action]
-        action_handler(self.opts)
+        action = Actions.get_action(self.opts)
+        Assistant.do(action, self.opts)
 
         logger.info("Done.")
 

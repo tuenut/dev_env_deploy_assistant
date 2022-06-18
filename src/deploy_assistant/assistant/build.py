@@ -5,7 +5,7 @@ import re
 from loguru import logger
 
 from subprocess import Popen, PIPE
-from typing import List, Literal
+from typing import List
 
 from semantic_version import Version
 
@@ -112,6 +112,3 @@ class ImageBuilder:
         return version == Version("0.0.0")
 
 
-def build_image(args):
-    builder = ImageBuilder(args)
-    builder.build_image()
