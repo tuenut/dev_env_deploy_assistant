@@ -3,7 +3,7 @@
 import sys
 from loguru import logger
 
-from deploy_assistant import DEPLOY_ACTIONS
+from assistant import DEPLOY_ACTIONS
 from options import OptionsParser
 
 

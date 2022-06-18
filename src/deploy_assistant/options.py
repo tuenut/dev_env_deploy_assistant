@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from dataclasses import dataclass
 from typing import Literal
 
-from .deploy_assistant import BUILD_ACTION
+from .assistant import BUILD_ACTION
 
 
 @dataclass
