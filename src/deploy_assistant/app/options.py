@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from dataclasses import dataclass
 from typing import Literal
 
-from .assistant import BUILD_ACTION
+from deploy_assistant.actions import Actions
 
 
 @dataclass
@@ -20,20 +20,27 @@ class OptionsParser:
             prog="deploy_assistant",
             description="That program helps you to manage your app images at "
                         "your local dev environment. For now you can build and "
-                        "rebuild images, and deploy assistant will control image "
-                        "version."
+                        "rebuild images, and deploy assistant will control "
+                        "image version."
         )
         self.parser.add_argument("-v", "--verbose", action="store_true")
-        self.parser.add_argument("-s", "--simulate", "--dry-run", "--no-act", action="store_true")
+        self.parser.add_argument(
+            "-s", "--simulate", "--dry-run", "--no-act",
+            action="store_true"
+        )
 
         self.__add_build_action()
 
     def __add_build_action(self):
         subparsers = self.parser.add_subparsers(title="Action", required=True)
 
-        build_action_parser = subparsers.add_parser(BUILD_ACTION)
+        build_action_parser = subparsers.add_parser(Actions.BUILD_ACTION.value)
         build_action_parser.add_argument("image")
-        build_action_parser.add_argument("next_version", choices=["major", "minor", "patch"], default="minor")
+        build_action_parser.add_argument(
+            "next_version",
+            choices=["major", "minor", "patch"],
+            default="minor"
+        )
         build_action_parser.set_defaults(action="build")
 
     def get_options(self) -> Options:
