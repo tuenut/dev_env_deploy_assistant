@@ -17,76 +17,77 @@ _BUILD_VERSIONS_MAP = {
     "minor": "next_minor",
     "patch": "next_patch"
 }
-BUILD_VERSIONS = tuple(_BUILD_VERSIONS_MAP.keys())
 
 
 class ImageBuilder:
-    _next_version: Version
-    _build_cmd: str
-
-    __simulate: bool
-    __update_type: Literal["major", "minor", "patch"]
-    __image: str
-
-    def __init__(self, args: Options):
-        self.__simulate = args.simulate
-        self.__update_type = args.next_version
-        self.__image = args.image
+    def __init__(self, options: Options):
+        self.options = options
 
         self.target = "app"
         self.context = "."
 
     def build_image(self):
-        self._next_version = self.__next_image_version
-        self._build_cmd = self.__build_command
+        new_image_version = self._get_new_image_version()
+        self._build_image(new_image_version)
 
-        logger.info(f"Execute command: `{self._build_cmd}`")
+    def _build_image(self, image_version: Version):
+        build_cmd = self.__get_build_command(image_version)
+        logger.info(f"Execute command: `{build_cmd}`")
 
-        if self.__simulate:
+        if self.options.simulate:
             return
 
-        self._build_image()
-
-    def _build_image(self):
-        with Popen(self.__build_command, shell=True) as proc:
+        with Popen(build_cmd, shell=True) as proc:
             proc.wait()
 
         if proc.returncode != 0:
             raise Exception("Something goes wrong on build.")
 
-    @property
-    def __next_image_version(self) -> Version:
-        docker_images_list_cmd = f'docker images {self.__image} --format "{{{{.Tag}}}}"'
-        logger.info("Execute command: `%s`", docker_images_list_cmd)
+    def _get_new_image_version(self) -> Version:
+        # TODO: make args to define which should be next build is major,
+        #  minor or patch
+        image_tags = self.__get_docker_images()
+
+        try:
+            latest_version = self._parse_latest_version(image_tags)
+        except ValueError:
+            new_version = self.__get_default_version()
+        else:
+            new_version = self.__get_next_version(latest_version)
+
+        logger.info(f"Next image version will be <{new_version}>.")
+
+        return new_version
+
+    def __get_docker_images(self):
+        docker_images_list_cmd = \
+            f'docker images {self.options.image} --format "{{{{.Tag}}}}"'
+        logger.info(f"Execute command: `{docker_images_list_cmd}`", )
         with Popen(docker_images_list_cmd, stdout=PIPE, shell=True) as proc:
             image_tags = proc.stdout.read().decode("utf8").split()
 
-        self.latest_version = self._parse_latest_version(image_tags)
-        # TODO: make args to define should be next build is major, minor or patch
-        if self.latest_version:
-            logger.info(f"Found latest version of image <{self.latest_version}>")
-            _version_incrementer = getattr(
-                self.latest_version,
-                _BUILD_VERSIONS_MAP[self.__update_type]
-            )
-            next_version = _version_incrementer()
-        else:
-            logger.info("Can't find any previous valid versions of image.")
-            next_version = Version("0.0.0")
+        return image_tags
 
-        logger.info(f"Next image version will be <{next_version}>.")
+    def __get_next_version(self, latest_version):
+        logger.info(f"Found latest version of image <{latest_version}>")
+        _version_incrementer = getattr(
+            latest_version,
+            _BUILD_VERSIONS_MAP[self.options.next_version]
+        )
+        return _version_incrementer()
 
-        return next_version
+    def __get_default_version(self):
+        logger.info("Can't find any previous valid versions of image.")
+        return Version("0.0.0")
 
-    @property
-    def __build_command(self) -> str:
+    def __get_build_command(self, new_image_version: Version) -> str:
         docker_build_cmd = "docker build"
 
-        image_tag_arg = f"--tag {self.__image}"
-        version_tag_arg = f"--tag {self.__image}:{self._next_version}"
+        image_tag_arg = f"--tag {self.options.image}"
+        version_tag_arg = f"--tag {self.options.image}:{new_image_version}"
 
-        cache_from_arg = f"--cache-from {self.__image}:latest" \
-            if self._is_first_version(self._next_version) else ""
+        cache_from_arg = f"--cache-from {self.options.image}:latest" \
+            if not self._is_first_version(new_image_version) else ""
 
         # TODO: remove multitarget images support until it unified
         target_arg = f"--target {self.target}"
